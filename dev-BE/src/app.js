@@ -1,113 +1,113 @@
 const express = require("express");
+const mongoose = require("mongoose");
+const connectDb = require("./config/database");
 const app = express();
-const { adminAuth, userAuth } = require("./middelwares/auth");
-// app.use("/", (req, res) => {
-// res.send("Hello From ");
-// });
-// app.use((req, res) => {
-//   res.send("Hello From the server👮‍♂️");
-// });
-//we can gave route also
-// app.use("/test", (req, res) => {
-//   res.send("Hello From the server");
-// });
-// app.use("/", (req, res) => {
-//   res.send("Hello From ");
-// });
-//!use -->this will match all the http method  API call to /user
-// app.use("/user", (req, res) => {
-//   res.send("Hii this is prateek🙋");
-// });/
-//! this will only handle Get call to /user
-// app.get("/user", (req, res) => {
-//   res.send({ firstName: "Prateek", lastName: "Sahu" });
-// });
-// app.post("/user", (req, res) => {
-//   console.log("Save the data to the data base");
-//   res.send("Data successfully saved to the database");
-// });
-// app.delete("/user", (req, res) => {
-//   console.log("Delete the data to the data base");
-//   res.send("Data successfully Deleted from  the database");
-// });
-// //^------------------------------
-// //!here Pattern -->> +,*,?
-// app.get("/ab+c", (req, res) => {
-//   res.send({ firstName: "Prateek", lastName: "Sahu" });
-// });
-// //!here it means bc is optional
-// app.get("/a(bc)?d", (req, res) => {
-//   res.send({ firstName: "Prateek", lastName: "Sahu" });
-// });
-// //& instead of string i can write the regex
-// app.get(/.*fly$/, (req, res) => {
-//   res.send({ firstName: "Prateek", lastName: "Sahu" });
-// });
+app.use(express.json());
+//^ For Saving the data to our data base first we need require our modal
 
-// //*query param
-// app.get("/user", (req, res) => {
-//   console.log("🚀 ~ app.get ~ req:", req.query);
-//   res.send({ firstName: "Prateek", lastName: "Sahu" });
-// });
-// //* dynamic routing
-// app.get("/user/:userId/:name", (req, res) => {
-//   console.log("🚀 ~ app.get ~ req:", req.params);
-//   res.send({ firstName: "Prateek", lastName: "Sahu" });
-// });
-//!next route handler we can write array and mix and match also
-// app.use(
-//   "/user",
-//   (req, res, next) => {
-//     console.log("handling fist response");
-//     res.send("1st response");
-//     next();
-//   },
-//   (req, res) => {
-//     console.log("second res");
-//     res.send("2nd response");
-//   }
-// );
+const User = require("./models/user");
+//!sign up api
+app.post("/signup", async (req, res) => {
+  //HardCode Ways
+  // const userObject = {
+  //   firstName: "hgh",
+  //   lastName: "ghg",
+  //   emailId: "ghgh@gmail.com",
+  //   password: "hgh@1234",
+  // };
+  // //*Creating a new instance of the user Modal
 
-//!we can do this way also
-// app.use("/", (req, res) => {
-//   res.send("hhhhhhhhhhhhh");
-// });
-// app.get("/user", (req, res, next) => {
-//   console.log("Handling the routr user");
-//   next();
-// });
-// app.get("/user", (req, res, next) => {
-//   console.log("Handling the route");
-//   res.send("2nd Route Handler");
-// });
-
-//!handle auth MiddleWare For all request
-//app.use("/hhhh") here we can check the
-//app.all("")
-// app.use("/admin", adminAuth);
-// // app.use("/user", userAuth);/we can erite like this also
-// app.get("/user", userAuth, (req, res) => {
-//   res.send("all user are ");
-// });
-// app.get("/admin/getAllData", (req, res) => {
-//   res.send("all data send");
-// });
-// app.get("/admin/deleteUser", (req, res) => {
-//   res.send("delete data ");
-// });
-
-//!! Error Handling only this err should be fist parameter
-app.use("/", (err, req, res, next) => {
-  if (err) {
-    res.status(500).send("something went wrong");
+  // try {
+  //   const user = new User(userObject);
+  //   await user.save();
+  //   res.send("User Added SuccessFull🚀🚀");
+  // } catch (error) {
+  //   res.status(400).send("Error Saving the user");
+  // }
+  try {
+    const newUser = new User(req.body);
+    const savedUser = await newUser.save();
+    res
+      .status(201)
+      .json({ message: "User Created Successfully", responseObj: savedUser });
+  } catch (err) {
+    res.status(400).json({ error: err.message });
   }
 });
-app.get("/getUserData", (req, res) => {
-  //If any wrong in this code
-  throw new Error("😒😏😏😏");
-  res.send("all user are ");
+//!GET Single User By email
+// app.get("/user", async (req, res) => {
+//   try {
+//     //here we can also findOne
+//     const userEmail = req.body.emailId;
+//     const user = await User.find({ emailId: userEmail });
+//     if (user.length) {
+//       res.send(user);
+//     } else {
+//       res.status(404).send("user not found (❁´◡`❁)");
+//     }
+//   } catch (error) {
+//     res.status(400).send("Something Went Wrong");
+//   }
+// });
+
+//!get user by id normal way
+// app.get("/user/id", async (req, res) => {
+//   try {
+//     const userId = req.body._id;
+//     const filterUserId = await User.findById({ _id: userId });
+//     res.send(filterUserId);
+//   } catch (error) {
+//     res.status(400).send("Something Went Wrong------");
+//   }
+// });/
+
+//!get user by emailid qeryparam
+app.get("/user/by-email", async (req, res) => {
+  try {
+    const userEmail = req.query.emailId;
+    const user = await User.find({ emailId: userEmail });
+
+    if (user.length) {
+      res.send(user);
+    } else {
+      res.status(404).send("User not found (❁´◡`❁)");
+    }
+  } catch (error) {
+    res.status(400).send("Something went wrong");
+  }
 });
-//---------------------------------------------------------
-app.listen(3000, () => {
-  console.log("Server is Started on Port 3000");
+//!Get user by ID (use URL parameter)
+app.get("/user/:_id", async (req, res) => {
+  const userId = req.params._id;
+
+  if (!mongoose.Types.ObjectId.isValid(userId)) {
+    return res.status(400).send("Invalid user ID");
+  }
+
+  try {
+    const user = await User.findById(userId);
+    if (user) {
+      res.send(user);
+    } else {
+      res.status(404).send("User not Found");
+    }
+  } catch (error) {
+    console.error("❌ Error:", error.message);
+    res.status(500).send("Something went wrong .......");
+  }
+});
+//!Feed Api - GET /feed - get all the user from the database
+app.get("/feed", async (req, res) => {
+  try {
+    const users = await User.find({});
+    res.send(users);
+  } catch (error) {
+    res.status(401).send("Something went wrong 😏😏😏");
+  }
+});
+connectDb().then(() => {
+  console.log("DataBase Connection established ....");
+  app.listen(3001, () => {
+    console.log("server listining on port 3001");
+  });
 });
